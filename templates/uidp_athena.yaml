@@ -1,0 +1,87 @@
+# SECRETS / CONFIGMAPS
+---
+# Docker Registry Credentials
+apiVersion: v1
+kind: Secret
+metadata:
+  name:  regcred
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: uidp
+    name: regcred
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: "eyJhdXRocyI6eyJ1aWRwcmVnLmF6dXJlY3IuaW8iOnsidXNlcm5hbWUiOiJ1aWRwcmVnIiwicGFzc3dvcmQiOiJLaGZEdD1FPUcwOStQWGtoSW9CV2xXWkQ1MlBLR2VUcCIsImVtYWlsIjoiZ2x5bi5ib3dkZW5AaHBlLmNvbSIsImF1dGgiOiJkV2xrY0hKbFp6cExhR1pFZEQxRlBVY3dPU3RRV0d0b1NXOUNWMnhYV2tRMU1sQkxSMlZVY0E9PSJ9fX0="
+---
+# SERVICES
+---
+# tensorflow-train Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: tensorflow-train
+  labels:
+    app: athena
+    component: tensorflow-train
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - port: 6006
+    targetPort: 6006
+    name: TensorBoard
+  - port: 8888
+    targetPort: 8888
+    name: iPython
+  selector:
+    app: athena
+    component: tensorflow-train
+  type: LoadBalancer
+---
+# DEPLOYMENTS
+---
+# tensorflow-train Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tensorflow-train
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: athena
+    component: tensorflow-train
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: athena
+      component: tensorflow-train
+  template:
+    metadata:
+      name: tensorflow-train
+      labels:
+        app: athena
+        component: tensorflow-train 
+    spec:
+      containers:
+      - name: tensorflow-train
+        image: uidpreg.azurecr.io/tensorflow:v1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 6006
+        - containerPort: 8888
+      imagePullSecrets:
+      - name: regcred
+      nodeSelector:
+        role: mltraining
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: component
+                  operator: In
+                  values:
+                  - tensorflow-train
+                - key: app
+                  operator: In
+                  values:
+                  - athena
