@@ -21,7 +21,7 @@ kind: Service
 metadata:
   name: tensorflow-train
   labels:
-    app: athena
+    app: discoverlab
     component: tensorflow-train
   namespace: {{ .Release.Namespace }}
 spec:
@@ -33,7 +33,7 @@ spec:
     targetPort: 8888
     name: ipython
   selector:
-    app: athena
+    app: discoverlab
     component: tensorflow-train
   type: LoadBalancer
 ---
@@ -46,19 +46,19 @@ metadata:
   name: tensorflow-train
   namespace: {{ .Release.Namespace }}
   labels:
-    app: athena
+    app: discoverlab
     component: tensorflow-train
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: athena
+      app: discoverlab
       component: tensorflow-train
   template:
     metadata:
       name: tensorflow-train
       labels:
-        app: athena
+        app: discoverlab
         component: tensorflow-train 
     spec:
       containers:
@@ -72,16 +72,3 @@ spec:
       - name: regcred
       nodeSelector:
         role: mltraining
-      affinity:
-        podAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                - key: component
-                  operator: In
-                  values:
-                  - tensorflow-train
-                - key: app
-                  operator: In
-                  values:
-                  - athena
