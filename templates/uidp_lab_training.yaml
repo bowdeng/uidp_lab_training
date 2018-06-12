@@ -28,10 +28,10 @@ spec:
   ports:
   - port: 6006
     targetPort: 6006
-    name: TensorBoard
+    name: tensorboard
   - port: 8888
     targetPort: 8888
-    name: iPython
+    name: ipython
   selector:
     app: athena
     component: tensorflow-train
